@@ -1,0 +1,4 @@
+StatInference
+=============
+
+Statistical Inference project
