@@ -1,0 +1,83 @@
+---
+title: "Statistical inference project. Part 2."
+author: "Anton"
+date: "Tuesday, September 16, 2014"
+output: html_document
+---
+
+#Basic inferential data analysis
+
+In this part of the project, we analyze the ToothGrowth data in the R datasets package.
+Load the data and look on its structure.
+```{r}
+data("ToothGrowth")
+str(ToothGrowth)
+```  
+The variable *dose* should be a factor. Encode *dose* as a factor and summarize the data.  
+```{r}
+ToothGrowth$dose <- factor(ToothGrowth$dose)
+summary(ToothGrowth)
+with(ToothGrowth, table(dose, supp))
+```  
+There is no NA data and for each of ten pigs we have an observation of each dose level and each delivery method (in assumption that there is one group of 10 pigs).    
+Let's get started and look on data briefly.  
+```{r}
+par(mfrow=c(1,2))
+boxplot(len ~ dose, data = ToothGrowth)
+boxplot(len ~ supp, data = ToothGrowth)
+```
+
+We can see that:  
+- the higher dose, the faster growth of teeth  
+- orange juice looks like more effective delivery method.  
+Now look at interaction of doses and delivery methods. 
+```{r}
+par(mfrow=c(1,1))
+boxplot(len ~ dose*supp, data = ToothGrowth)
+```  
+
+We can see that on small doses (0.5, 1.0) orange juice looks like more efficient.  
+But what about 2mg dose? Let's look more precisely:
+```{r}
+agmean <- aggregate(len ~ ., data = ToothGrowth,  mean)
+names(agmean)[3] <- "lmean"
+agmedian <- aggregate(len ~ ., data = ToothGrowth, median)
+names(agmedian)[3] <- "lmedian"
+cbind(agmean, agmedian["lmedian"])
+```
+For 2mg dose: the mean of length just a little bit higher for ascorbic acid while there is no difference in medians. Suppose there is no difference in delivery methods for this dose.  
+
+To prove our hypotheses let's make some tests.  
+We have small samples of same group so use paired t-test. Nevertheless, do we have a distribution close to normal?  
+The data looks relatively normal:
+```{r}
+par(mfrow=c(1,2))
+hist(ToothGrowth$len, freq = FALSE, xlab = "Length", main = NULL)
+lines(density(ToothGrowth$len), col = "blue")
+curve(dnorm(x, mean(ToothGrowth$len), sd(ToothGrowth$len)), col="red", add = TRUE)
+qqnorm(ToothGrowth$len, main="", col = "blue")
+qqline(ToothGrowth$len, col="red")
+```  
+
+  Now let's look on confidence intervals and p-values:  
+```{r}
+dose1 <- ToothGrowth[ToothGrowth$dose == 0.5, ]
+dose2 <- ToothGrowth[ToothGrowth$dose == 1, ]
+dose3 <- ToothGrowth[ToothGrowth$dose == 2, ]
+t.test(dose2$len, dose1$len, paired = TRUE)
+t.test(dose3$len, dose2$len, paired = TRUE)
+t.test(dose3$len, dose1$len, paired = TRUE)
+```
+Ho - it's no metter OJ or VC  
+```{r}
+oj <- ToothGrowth[ToothGrowth$supp == "OJ", ]
+vc <- ToothGrowth[ToothGrowth$supp == "VC", ]
+t.test(oj$len, vc$len, paired = TRUE)
+```  
+So we can reject Ho  
+```{r}
+oj <- ToothGrowth[ToothGrowth$supp == "OJ" & ToothGrowth$dose==2, ]
+vc <- ToothGrowth[ToothGrowth$supp == "VC" & ToothGrowth$dose==2, ]
+t.test(oj$len, vc$len, paired = TRUE)
+```
+So with dose 2.0 OJ and VC are simmilar
