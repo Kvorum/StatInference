@@ -2,7 +2,7 @@
 title: "Statistical inference project. Part 2."
 author: "Anton"
 date: "Tuesday, September 16, 2014"
-output: html_document
+output: pdf_document
 ---
 
 #Basic inferential data analysis
@@ -20,8 +20,8 @@ summary(ToothGrowth)
 with(ToothGrowth, table(dose, supp))
 ```  
 There is no NA data and for each of ten pigs we have an observation of each dose level and each delivery method (in assumption that there is one group of 10 pigs).    
-Let's get started and look on data briefly.  
-```{r}
+Let's get started and look on data briefly:  
+```{r, fig.height = 3}
 par(mfrow=c(1,2))
 boxplot(len ~ dose, data = ToothGrowth)
 boxplot(len ~ supp, data = ToothGrowth)
@@ -31,7 +31,7 @@ We can see that:
 - the higher dose, the faster growth of teeth  
 - orange juice looks like more effective delivery method.  
 Now look at interaction of doses and delivery methods. 
-```{r}
+```{r, fig.height = 4}
 par(mfrow=c(1,1))
 boxplot(len ~ dose*supp, data = ToothGrowth)
 ```  
@@ -50,7 +50,7 @@ For 2mg dose: the mean of length just a little bit higher for ascorbic acid whil
 To prove our hypotheses let's make some tests.  
 We have small samples of same group so use paired t-test. Nevertheless, do we have a distribution close to normal?  
 The data looks relatively normal:
-```{r}
+```{r, fig.height = 4}
 par(mfrow=c(1,2))
 hist(ToothGrowth$len, freq = FALSE, xlab = "Length", main = NULL)
 lines(density(ToothGrowth$len), col = "blue")
@@ -59,7 +59,9 @@ qqnorm(ToothGrowth$len, main="", col = "blue")
 qqline(ToothGrowth$len, col="red")
 ```  
 
-  Now let's look on confidence intervals and p-values:  
+Let's perform tests and look on confidence intervals and p-values:  
+
+- $H_0$ 0.5mg dose, 1mg dose, 2mg dose have same effectiveness.
 ```{r}
 dose1 <- ToothGrowth[ToothGrowth$dose == 0.5, ]
 dose2 <- ToothGrowth[ToothGrowth$dose == 1, ]
@@ -68,16 +70,19 @@ t.test(dose2$len, dose1$len, paired = TRUE)
 t.test(dose3$len, dose2$len, paired = TRUE)
 t.test(dose3$len, dose1$len, paired = TRUE)
 ```
-Ho - it's no metter OJ or VC  
+In all cases, we have small p-values and confidence intervals don't have a zero. Correctly reject null.  
+
+- $H_0$ - it's no matter orange juice or ascorbic acid.    
 ```{r}
 oj <- ToothGrowth[ToothGrowth$supp == "OJ", ]
 vc <- ToothGrowth[ToothGrowth$supp == "VC", ]
 t.test(oj$len, vc$len, paired = TRUE)
 ```  
-So we can reject Ho  
+The p-value small enough and confidence interval don't have a zero. Correctly reject null.  
+However, we remember *2mg dose* case:
 ```{r}
 oj <- ToothGrowth[ToothGrowth$supp == "OJ" & ToothGrowth$dose==2, ]
 vc <- ToothGrowth[ToothGrowth$supp == "VC" & ToothGrowth$dose==2, ]
 t.test(oj$len, vc$len, paired = TRUE)
 ```
-So with dose 2.0 OJ and VC are simmilar
+In this case we fail to reject null.
